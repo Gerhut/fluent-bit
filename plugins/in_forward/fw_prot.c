@@ -1200,6 +1200,33 @@ error:
     return -1;
 }
 
+static int vaild_os_flag(const char data)
+{
+    uint8_t p;
+
+    p = (uint8_t)data;
+    if (p == 0x00 || /* Fat Filesystem       */
+        p == 0x01 || /* Amiga                */
+        p == 0x02 || /* VMS                  */
+        p == 0x03 || /* Unix                 */
+        p == 0x04 || /* VM/CMS               */
+        p == 0x05 || /* Atari TOS            */
+        p == 0x06 || /* HPFS Filesystem (OS/2, NT) */
+        p == 0x07 || /* Macintosh            */
+        p == 0x08 || /* Z-System             */
+        p == 0x09 || /* CP/M                 */
+        p == 0x0a || /* TOPS-20              */
+        p == 0x0b || /* NTFS filesystem (NT) */
+        p == 0x0c || /* QDOS                 */
+        p == 0x0d || /* Acorn RISCOS         */
+        p == 0xff)   /* Unknown              */ {
+
+        return FLB_TRUE;
+    }
+
+    return FLB_FALSE;
+}
+
 static size_t gzip_concatenated_count(const char *data, size_t len)
 {
     int i;
@@ -1210,8 +1237,9 @@ static size_t gzip_concatenated_count(const char *data, size_t len)
 
     /* search other gzip starting bits and method. */
     for (i = 2; i < len &&
-                 i + 2 <= len; i++) {
-        if (p[i] == 0x1F && p[i+1] == 0x8B && p[i+2] == 8) {
+                 i + 9 <= len; i++) {
+        if (p[i] == 0x1F && p[i+1] == 0x8B && p[i+2] == 8 &&
+            vaild_os_flag(p[i+9])) {
             count++;
         }
     }
@@ -1235,8 +1263,9 @@ static size_t gzip_concatenated_borders(const char *data, size_t len, size_t **o
 
     /* search other gzip starting bits and method. */
     for (i = 2; i < len &&
-                 i + 2 <= len; i++) {
-        if (p[i] == 0x1F && p[i+1] == 0x8B && p[i+2] == 8) {
+                 i + 9 <= len; i++) {
+        if (p[i] == 0x1F && p[i+1] == 0x8B && p[i+2] == 8 &&
+            vaild_os_flag(p[i+9])) {
             borders[count] = i;
             count++;
         }
